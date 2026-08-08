@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://maizescan-vmi3.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const ReportsPage = ({ user }) => {
     const navigate = useNavigate();
@@ -23,7 +23,9 @@ const ReportsPage = ({ user }) => {
 
     const fetchBatches = async () => {
         try {
-            const response = await axios.get(`${API_URL}/batches`);
+            const token = localStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const response = await axios.get(`${API_URL}/batches`, config);
             setBatches(response.data);
         } catch (err) {
             console.error("Fetch batches failed:", err);
@@ -415,7 +417,12 @@ const ReportsPage = ({ user }) => {
                                             <button className="cert-btn" onClick={() => generateCertificatePDF(batch)} disabled={downloading === batch.id}>
                                                 <FileText size={16} /> PDF
                                             </button>
-                                            <button className="cert-btn delete" onClick={async () => { if (confirm('Purge record?')) { await axios.delete(`${API_URL}/batches/${batch.id}`); fetchBatches(); } }}><Trash2 size={16} /></button>
+                                            <button className="cert-btn delete" onClick={async () => { if (confirm('Purge record?')) { 
+                                                const token = localStorage.getItem('token');
+                                                const config = { headers: { Authorization: `Bearer ${token}` } };
+                                                await axios.delete(`${API_URL}/batches/${batch.id}`, config); 
+                                                fetchBatches(); 
+                                            } }}><Trash2 size={16} /></button>
                                         </div>
                                     </td>
                                 </motion.tr>
@@ -429,12 +436,13 @@ const ReportsPage = ({ user }) => {
                 .ledger-row { transition: background 0.2s; }
                 .ledger-row:hover { background: #f9fafb !important; }
                 .cert-btn {
-                    background: transparent; border: 1.5px solid #f1f5f9; padding: 0.5rem 0.85rem; border-radius: 0.6rem;
-                    cursor: pointer; color: var(--text-main); font-weight: 700; font-size: 0.8rem;
+                    background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 0.6rem 1rem; border-radius: 0.75rem;
+                    cursor: pointer; color: #051F20; font-weight: 800; font-size: 0.85rem;
                     display: flex; alignItems: center; gap: 0.5rem; transition: all 0.2s;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
                 }
-                .cert-btn:hover { background: var(--primary); border-color: var(--primary); color: white; transform: translateY(-1px); }
-                .cert-btn.delete:hover { background: #ef4444; border-color: #ef4444; color: white; }
+                .cert-btn:hover { background: var(--primary); border-color: var(--primary); color: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35, 83, 71, 0.2); }
+                .cert-btn.delete:hover { background: #fee2e2; border-color: #fecaca; color: #dc2626; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1); }
             `}</style>
         </div>
     );

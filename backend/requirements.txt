@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-ultralytics
+onnxruntime
 opencv-python-headless
 sqlalchemy
 pydantic[email]

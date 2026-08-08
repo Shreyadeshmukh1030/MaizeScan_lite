@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, LogIn, ArrowLeft, Scan } from 'lucide-react';
+import { Mail, Lock, LogIn, ArrowLeft, Scan, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
@@ -8,16 +8,23 @@ const LoginPage = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        if (formData.password.length < 8) {
+            setError('System Integrity: Password must be at least 8 characters.');
+            return;
+        }
         setIsLoading(true);
         try {
             const params = new URLSearchParams();
             params.append('username', formData.email);
             params.append('password', formData.password);
 
-            const API_URL = import.meta.env.VITE_API_URL || 'https://maizescan-vmi3.onrender.com';
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
             const response = await axios.post(`${API_URL}/token`, params, {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             });
@@ -26,7 +33,7 @@ const LoginPage = () => {
             navigate('/analytics');
         } catch (err) {
             console.error("Login failed:", err);
-            alert("Uplink Failed: " + (err.response?.data?.detail || "Invalid credentials or backend offline."));
+            setError(err.response?.data?.detail || "Uplink Failed. Check credentials.");
         } finally {
             setIsLoading(false);
         }
@@ -77,6 +84,12 @@ const LoginPage = () => {
                     <p style={{ color: 'var(--text-light)', fontWeight: 600, fontSize: '0.9rem' }}>Access the MaizeScan Intelligence Hub</p>
                 </div>
 
+                {error && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.85rem', fontWeight: 800 }}>
+                        {error}
+                    </motion.div>
+                )}
+
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <div style={{ position: 'relative' }}>
                         <Mail style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} size={16} />
@@ -96,16 +109,23 @@ const LoginPage = () => {
                     <div style={{ position: 'relative' }}>
                         <Lock style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} size={16} />
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             placeholder="Password"
                             style={{ 
-                                width: '100%', padding: '0.85rem 1rem 0.85rem 3.5rem', height: '52px', borderRadius: '0.6rem', 
+                                width: '100%', padding: '0.85rem 3.5rem 0.85rem 3.5rem', height: '52px', borderRadius: '0.6rem', 
                                 border: '1px solid #e2e8f0', background: 'white', fontWeight: 600, outline: 'none', fontSize: '0.95rem'
                             }}
                             required
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         />
+                        <button 
+                            type="button" 
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}
+                        >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-light)' }}>

@@ -17,7 +17,7 @@ import CertificatePage from './pages/CertificatePage';
 import axios from 'axios';
 import { Navigate } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://maizescan-vmi3.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const App = () => {
   return (
@@ -87,7 +87,7 @@ const AppContent = () => {
 
         <main style={{ flex: 1 }}>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<LandingPage user={user} />} />
             <Route path="/detect" element={<ProtectedRoute><DetectionPage user={user} /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage user={user} /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><DashboardPage user={user} /></ProtectedRoute>} />

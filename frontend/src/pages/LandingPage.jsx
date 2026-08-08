@@ -7,8 +7,22 @@ import {
     AlertTriangle, PlayCircle
 } from 'lucide-react';
 
-const LandingPage = () => {
+const LandingPage = ({ user }) => {
     const navigate = useNavigate();
+    const demo_url = "https://youtu.be/_HE1PwKX_Qc?si=BHaKMWUgKKC-PKO_"; 
+
+    const handleStartDetection = () => {
+        const token = localStorage.getItem('token');
+        if (user || token) {
+            navigate('/detect');
+        } else {
+            navigate('/login');
+        }
+    };
+
+    const handleWatchDemo = () => {
+        window.open(demo_url, "_blank");
+    };
 
     return (
         <div style={{ background: 'var(--background)', overflowX: 'hidden' }}>
@@ -22,7 +36,7 @@ const LandingPage = () => {
                     <div style={{ maxWidth: '850px', margin: '0 auto', textAlign: 'center' }}>
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                             <div className="section-tag" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '1.5rem', backdropFilter: 'blur(5px)' }}>
-                                Artificial Intelligence // Agriculture
+                                Artificial Intelligence- Agriculture
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}>
                                 Precision Maize Quality <br /> 
@@ -34,10 +48,10 @@ const LandingPage = () => {
                             </p>
                             
                             <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', alignItems: 'center' }}>
-                                <button onClick={() => navigate('/detect')} className="btn btn-primary" style={{ padding: '1rem 2.5rem', background: '#52b788', borderRadius: '0.75rem' }}>
+                                <button onClick={handleStartDetection} className="btn btn-primary" style={{ padding: '1rem 2.5rem', background: '#52b788', borderRadius: '0.75rem' }}>
                                     Start Detection <ArrowRight size={18} />
                                 </button>
-                                <button className="btn btn-outline" style={{ padding: '1rem 2.5rem', borderRadius: '0.75rem' }}>
+                                <button onClick={handleWatchDemo} className="btn btn-outline" style={{ padding: '1rem 2.5rem', borderRadius: '0.75rem' }}>
                                     <PlayCircle size={18} /> Watch Demo
                                 </button>
                             </div>
@@ -51,7 +65,7 @@ const LandingPage = () => {
                 <div className="container">
                     <div className="metrics-grid">
                         <MetricCard val="10K+" label="Seeds Analyzed" desc="Real-time precision counts." icon={<Scan size={20} />} />
-                        <MetricCard val="98.4%" label="Inference Accuracy" desc="Validated AI core." icon={<ShieldCheck size={20} />} />
+                        <MetricCard val="96.4%" label="Inference Accuracy" desc="Validated AI core." icon={<ShieldCheck size={20} />} />
                         <MetricCard val="150ms" label="Response Time" desc="Ultra-fast edge compute." icon={<Zap size={20} />} />
                         <MetricCard val="2K+" label="Global Partners" desc="Trusted by agri-networks." icon={<Users size={20} />} />
                     </div>
@@ -124,7 +138,7 @@ const LandingPage = () => {
                         </p>
                         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                             <button onClick={() => navigate('/register')} className="btn" style={{ background: 'white', color: 'var(--primary-dark)' }}>Create Free Account</button>
-                            <button onClick={() => navigate('/detect')} className="btn btn-outline">Launch Live Demo</button>
+                            <button onClick={handleStartDetection} className="btn btn-outline">Launch Live Demo</button>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, UserPlus, ArrowLeft, Phone, MapPin, Scan } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, ArrowLeft, Phone, MapPin, Scan, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
@@ -10,12 +10,19 @@ const RegisterPage = () => {
         name: '', email: '', phone: '', password: '', role: 'Farmer', location: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        if (formData.password.length < 8) {
+            setError('System Integrity: Password must be at least 8 characters.');
+            return;
+        }
         setIsSubmitting(true);
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'https://maizescan-vmi3.onrender.com';
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
             await axios.post(`${API_URL}/register`, {
                 email: formData.email,
                 password: formData.password,
@@ -26,7 +33,7 @@ const RegisterPage = () => {
             navigate('/login');
         } catch (err) {
             console.error("Enrollment failed:", err);
-            alert("Enrollment Failed: " + (err.response?.data?.detail || "Connection error."));
+            setError(err.response?.data?.detail || "Enrollment Failed. Connection error.");
         } finally {
             setIsSubmitting(false);
         }
@@ -73,9 +80,15 @@ const RegisterPage = () => {
                     <div style={{ display: 'inline-flex', marginBottom: '1rem', background: 'var(--primary-dark)', padding: '0.5rem', borderRadius: '0.75rem' }}>
                         <img src="/images/logo.png" alt="MaizeScan" style={{ height: '30px', width: 'auto' }} />
                     </div>
-                    <h2 style={{ fontSize: '1.6rem', fontWeight: 950, color: 'var(--primary-dark)', marginBottom: '0.2rem' }}>Operator Enrollment</h2>
+                    <h2 style={{ fontSize: '1.6rem', fontWeight: 950, color: 'var(--primary-dark)', marginBottom: '0.25rem' }}>Operator Enrollment</h2>
                     <p style={{ color: 'var(--text-light)', fontWeight: 600, fontSize: '0.85rem' }}>Create your account to access the AI sorting engine</p>
                 </div>
+
+                {error && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.8rem', fontWeight: 800 }}>
+                        {error}
+                    </motion.div>
+                )}
 
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.85rem' }}>
                     <div style={{ gridColumn: 'span 2' }}>
@@ -128,16 +141,23 @@ const RegisterPage = () => {
                     <div style={{ position: 'relative' }}>
                         <Lock style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} size={16} />
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             placeholder="Create Password"
                             style={{ 
-                                width: '100%', padding: '0.75rem 1rem 0.75rem 3.5rem', height: '48px', borderRadius: '0.6rem', 
+                                width: '100%', padding: '0.75rem 3.5rem 0.75rem 3.5rem', height: '48px', borderRadius: '0.6rem', 
                                 border: '1px solid #e2e8f0', background: 'white', fontWeight: 600, outline: 'none', fontSize: '0.9rem'
                             }}
                             required
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         />
+                        <button 
+                            type="button" 
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}
+                        >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
                     </div>
 
                     <div style={{ position: 'relative' }}>

@@ -15,6 +15,7 @@ test_login.py
 # --- AI & Vision ---
 runs/
 *.pt
+!backend/seed_model.pt
 yolo26n.pt
 yolov8n.pt
 dataset/
