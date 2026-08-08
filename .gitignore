@@ -19,7 +19,7 @@ yolo26n.pt
 yolov8n.pt
 dataset/
 yolo_dataset/
-images/
+/images/
 labels/
 label_debug/
 
