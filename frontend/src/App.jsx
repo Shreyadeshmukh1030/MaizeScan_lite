@@ -116,7 +116,7 @@ const PublicHeader = () => (
     </div>
     <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
       <Link to="/" className="nav-link">Home</Link>
-      <Link to="/guide" className="nav-link">Master Guide</Link>
+      <Link to="/guide" className="nav-link">System Manual</Link>
       <div style={{ width: '1px', height: '16px', background: 'rgba(0,0,0,0.1)', margin: '0 0.5rem' }} />
       <Link to="/login" className="nav-link" style={{ opacity: 1, color: 'var(--primary)' }}>Login</Link>
       <Link to="/register" className="btn btn-primary" style={{ padding: '0.6rem 1.25rem', borderRadius: '0.5rem', fontSize: '0.85rem' }}>Join Platform</Link>
@@ -185,7 +185,7 @@ const Sidebar = ({ isOpen, toggle }) => {
         <SidebarLink to="/detect" icon={<Scan size={22} />} label="Live Inspection" />
         <SidebarLink to="/reports" icon={<FileText size={22} />} label="Audit Trail" />
         <SidebarLink to="/revenue" icon={<DollarSign size={22} />} label="Revenue Model" />
-        <SidebarLink to="/guide" icon={<BookOpen size={22} />} label="Farmer Education" />
+        <SidebarLink to="/guide" icon={<BookOpen size={22} />} label="System Manual" />
         <SidebarLink to="/profile" icon={<User size={22} />} label="Account Identity" />
 
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1.5rem 0' }} />
