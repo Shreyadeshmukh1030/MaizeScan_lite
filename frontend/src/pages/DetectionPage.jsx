@@ -432,8 +432,8 @@ const DetectionPage = ({ user }) => {
             {/* Sample Images Strip */}
             <div className="glass-panel" style={{ marginTop: '1.5rem', padding: '1rem', display: 'flex', gap: '1rem', overflowX: 'auto', alignItems: 'center' }}>
                 <div style={{ fontWeight: 800, color: 'var(--text-light)', whiteSpace: 'nowrap', marginRight: '0.5rem' }}>Test Samples:</div>
-                {['seed_excellent.png', 'seed_good.png', 'seed_average.png', 'defect_shriveled.jpg', 'defect_moldy.jpg'].map((img, idx) => {
-                    const titles = ['Excellent', 'Good', 'Average', 'Bad', 'Worst'];
+                {['defect_cracked.jpg', 'defect_insect.jpg', 'defect_moldy.jpg', 'defect_shriveled.jpg'].map((img, idx) => {
+                    const titles = ['Cracked', 'Insect', 'Moldy', 'Shriveled'];
                     return (
                         <div key={idx} onClick={() => loadSampleImage(`/images/${img}`)} style={{ cursor: 'pointer', textAlign: 'center', flexShrink: 0 }}>
                             <img src={`/images/${img}`} alt={titles[idx]} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '0.5rem', border: '2px solid rgba(0,0,0,0.1)' }} />
