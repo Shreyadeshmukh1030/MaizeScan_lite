@@ -37,7 +37,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "https://maize-scan.vercel.app",
-        "https://maize-scan-git-main-shreyadeshmukh1030s-projects.vercel.app"
+        "https://maize-scan-git-main-shreyadeshmukh1030s-projects.vercel.app",
+        "https://maizescanlite.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
