@@ -50,7 +50,7 @@ def read_root():
 
 # Robust path for cloud environments
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "seed_model.pt")
+MODEL_PATH = os.path.join(BASE_DIR, "seed_model.onnx")
 detector = detection.SeedDetector(model_path=MODEL_PATH)
 
 # --- AUTH UTILS ---
