@@ -188,6 +188,19 @@ const DetectionPage = ({ user }) => {
         }
     };
 
+    const loadSampleImage = async (imagePath) => {
+        setIsUsingCamera(false);
+        setUploadedImage(imagePath);
+        
+        try {
+            const response = await fetch(imagePath);
+            const blob = await response.blob();
+            processImage(blob);
+        } catch (err) {
+            console.error("Error loading sample image", err);
+        }
+    };
+
     // COORDINATE SCALING LOGIC
     const [mediaScale, setMediaScale] = useState({ s: 1, ox: 0, oy: 0, mw: 1, mh: 1 });
 
@@ -226,6 +239,9 @@ const DetectionPage = ({ user }) => {
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                     <h1 style={{ fontSize: '2rem', fontWeight: 900 }}>Live <span className="gradient-text">Inspection</span></h1>
                     <p style={{ color: 'var(--text-light)', fontWeight: 600 }}>Batch ID: {isBatchActive ? batchId : 'No Session Active'}</p>
+                    <p style={{ color: '#ef4444', fontSize: '0.75rem', fontWeight: 700, marginTop: '0.25rem' }}>
+                        * Note: Initial analysis may take 1-3 seconds due to Render free-tier latency.
+                    </p>
                 </motion.div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <button
@@ -411,6 +427,20 @@ const DetectionPage = ({ user }) => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Sample Images Strip */}
+            <div className="glass-panel" style={{ marginTop: '1.5rem', padding: '1rem', display: 'flex', gap: '1rem', overflowX: 'auto', alignItems: 'center' }}>
+                <div style={{ fontWeight: 800, color: 'var(--text-light)', whiteSpace: 'nowrap', marginRight: '0.5rem' }}>Test Samples:</div>
+                {['seed_excellent.png', 'seed_good.png', 'seed_average.png', 'defect_shriveled.jpg', 'defect_moldy.jpg'].map((img, idx) => {
+                    const titles = ['Excellent', 'Good', 'Average', 'Bad', 'Worst'];
+                    return (
+                        <div key={idx} onClick={() => loadSampleImage(`/images/${img}`)} style={{ cursor: 'pointer', textAlign: 'center', flexShrink: 0 }}>
+                            <img src={`/images/${img}`} alt={titles[idx]} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '0.5rem', border: '2px solid rgba(0,0,0,0.1)' }} />
+                            <div style={{ fontSize: '0.7rem', fontWeight: 700, marginTop: '0.2rem', color: 'var(--text-main)' }}>{titles[idx]}</div>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Bottom Controls Strip */}

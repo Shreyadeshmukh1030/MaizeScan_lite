@@ -410,7 +410,7 @@ const ReportsPage = ({ user }) => {
                                     <td style={{ padding: '1.25rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                                             <button className="cert-btn" onClick={() => navigate(`/certificate/${batch.id}`)}>
-                                                <Award size={16} /> View
+                                                <Award size={16} /> View Digital Certificate
                                             </button>
                                             <button className="cert-btn" onClick={() => generateCertificatePDF(batch)} disabled={downloading === batch.id}>
                                                 <FileText size={16} /> PDF
