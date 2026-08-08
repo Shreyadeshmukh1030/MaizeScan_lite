@@ -334,6 +334,7 @@ const ReportsPage = ({ user }) => {
 
     const processedBatches = [...batches]
         .filter(b => (b.batch_id?.toLowerCase() || "").includes(searchTerm.toLowerCase()))
+        .filter(b => filterGrade === 'All' || b.final_grade?.toUpperCase() === filterGrade)
         .sort((a, b) => b.timestamp < a.timestamp ? -1 : 1);
 
     return (
@@ -373,6 +374,21 @@ const ReportsPage = ({ user }) => {
                 </div>
             </div>
 
+            {/* Grade Filter Buttons */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, color: 'var(--text-light)', fontSize: '0.85rem' }}>Filter by Grade:</span>
+                {['All', 'A', 'B', 'C'].map(g => (
+                    <button key={g} onClick={() => setFilterGrade(g)}
+                        style={{ padding: '0.5rem 1.25rem', borderRadius: '2rem', fontWeight: 800, cursor: 'pointer', border: '2px solid',
+                            borderColor: filterGrade === g ? 'var(--primary)' : '#e2e8f0',
+                            background: filterGrade === g ? 'var(--primary)' : 'white',
+                            color: filterGrade === g ? 'white' : 'var(--text-main)', transition: '0.2s'
+                        }}
+                    >{g === 'All' ? 'All Grades' : `Grade ${g}`}</button>
+                ))}
+                <span style={{ marginLeft: 'auto', color: 'var(--text-light)', fontWeight: 700, fontSize: '0.85rem' }}>{processedBatches.length} records</span>
+            </div>
+
             <div style={{ 
                 background: 'white', borderRadius: '1.5rem', border: '1px solid rgba(0,0,0,0.05)',
                 overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' 
@@ -383,9 +399,10 @@ const ReportsPage = ({ user }) => {
                             <tr style={{ background: '#f9fafb', textAlign: 'left', borderBottom: '1px solid #f1f5f9' }}>
                                 <th style={{ padding: '1.25rem', color: 'var(--text-light)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Batch Identity</th>
                                 <th style={{ padding: '1.25rem', color: 'var(--text-light)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Timestamp</th>
-                                <th style={{ padding: '1.25rem', color: 'var(--text-light)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Yield Volume</th>
+                                <th style={{ padding: '1.25rem', color: 'var(--text-light)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Seeds</th>
+                                <th style={{ padding: '1.25rem', color: 'var(--text-light)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Quality %</th>
                                 <th style={{ padding: '1.25rem', color: 'var(--text-light)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>AI Grade</th>
-                                <th style={{ padding: '1.25rem', textAlign: 'right', color: 'var(--text-light)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Action</th>
+                                <th style={{ padding: '1.25rem', textAlign: 'right', color: 'var(--text-light)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -400,12 +417,22 @@ const ReportsPage = ({ user }) => {
                                 >
                                     <td style={{ padding: '1.25rem', fontWeight: 800, color: 'var(--primary-dark)' }}>{batch.batch_id}</td>
                                     <td style={{ padding: '1.25rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{new Date(batch.timestamp).toLocaleDateString()}</td>
-                                    <td style={{ padding: '1.25rem', fontWeight: 700 }}>{batch.total_count} Units</td>
+                                    <td style={{ padding: '1.25rem', fontWeight: 700 }}>{batch.total_count} seeds</td>
+                                    <td style={{ padding: '1.25rem', fontWeight: 800 }}>
+                                        {(() => {
+                                            const qPct = batch.total_count > 0
+                                                ? (((batch.excellent_count || 0) + (batch.good_count || 0)) / batch.total_count * 100).toFixed(1)
+                                                : '—';
+                                            const color = qPct >= 80 ? '#059669' : qPct >= 60 ? '#d97706' : '#dc2626';
+                                            return <span style={{ color, fontWeight: 900 }}>{qPct !== '—' ? `${qPct}%` : '—'}</span>;
+                                        })()}
+                                    </td>
                                     <td style={{ padding: '1.25rem' }}>
                                         <span style={{
                                             padding: '0.35rem 0.75rem', borderRadius: '0.5rem', fontWeight: 800, fontSize: '0.7rem',
-                                            background: '#dcfce7', color: '#166534'
-                                        }}>{batch.final_grade?.toUpperCase()}</span>
+                                            background: batch.final_grade === 'A' ? '#dcfce7' : batch.final_grade === 'B' ? '#fef9c3' : '#fee2e2',
+                                            color: batch.final_grade === 'A' ? '#166534' : batch.final_grade === 'B' ? '#713f12' : '#991b1b'
+                                        }}>Grade {batch.final_grade?.toUpperCase()}</span>
                                     </td>
                                     <td style={{ padding: '1.25rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>

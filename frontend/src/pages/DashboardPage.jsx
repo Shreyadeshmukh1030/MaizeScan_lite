@@ -137,16 +137,20 @@ const DashboardPage = ({ user }) => {
                 <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}>
                     <div className="section-tag" style={{ background: 'var(--primary-dark)', color: 'white', marginBottom: '1.25rem' }}>SaaS Enterprise Hub</div>
                     <h2 style={{ fontSize: '2.5rem', fontWeight: 950, color: 'var(--primary-dark)', letterSpacing: '-1.5px', margin: 0 }}>
-                        Operational <span style={{ color: 'var(--primary-light)' }}>Intelligence</span>
+                        Good morning, <span style={{ color: 'var(--primary-light)' }}>{user?.full_name?.split(' ')[0] || 'Analyst'} 👋</span>
                     </h2>
+                    <p style={{ color: 'var(--text-light)', fontWeight: 600, marginTop: '0.5rem' }}>Here is your maize quality overview.</p>
                 </motion.div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                     <div className="glass-panel" style={{ padding: '0.6rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'white' }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />
                         <span style={{ fontWeight: 800, fontSize: '0.85rem' }}>SYSTEM_SYNC: ACTIVE</span>
                     </div>
-                    <button className="btn btn-primary" onClick={exportCSV} style={{ padding: '0.6rem 1.5rem', borderRadius: '0.75rem' }}>
-                        <Download size={18} /> Export Results
+                    <a href="/detect" className="btn btn-primary" style={{ padding: '0.75rem 1.75rem', borderRadius: '0.75rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        🔬 Start New Inspection
+                    </a>
+                    <button className="btn btn-secondary" onClick={exportCSV} style={{ padding: '0.6rem 1.5rem', borderRadius: '0.75rem' }}>
+                        <Download size={18} /> Export
                     </button>
                 </div>
             </div>
@@ -186,6 +190,27 @@ const DashboardPage = ({ user }) => {
                     sub="Estimated market value"
                 />
             </div>
+
+            {/* AI Insights Card */}
+            {!loading && batches.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="glass-panel"
+                    style={{ padding: '1.5rem 2rem', marginBottom: '2rem', borderLeft: '4px solid #059669', display: 'flex', alignItems: 'center', gap: '1.5rem', background: '#f0fdf4' }}
+                >
+                    <div style={{ fontSize: '2rem' }}>🧠</div>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 900, color: '#065f46', marginBottom: '0.25rem' }}>AI Quality Insight</div>
+                        <div style={{ color: '#047857', fontWeight: 600, fontSize: '0.95rem' }}>
+                            {batches.length > 0
+                                ? `You have ${batches.length} batch${batches.length > 1 ? 'es' : ''} on record. Latest batch `
+                                    + `"${batches[0]?.batch_id}" was graded `
+                                    + `${batches[0]?.final_grade === 'A' ? '✅ Grade A — excellent quality seed stock.' : batches[0]?.final_grade === 'B' ? '⚠️ Grade B — suitable for commercial sale.' : '❌ Grade C — high defect rate detected.'}`
+                                : 'No batches yet. Start your first inspection to generate AI insights.'
+                            }
+                        </div>
+                    </div>
+                    <a href="/reports" style={{ fontWeight: 800, color: '#059669', textDecoration: 'none', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>View Audit Trail →</a>
+                </motion.div>
+            )}
 
             {/* --- NEW: PROFIT MAXIMIZER WIDGET --- */}
             <div className="glass-panel" style={{ padding: '2.5rem', marginBottom: '3rem', display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '3rem', background: 'var(--primary-dark)', color: 'white', border: 'none', position: 'relative', overflow: 'hidden' }}>
