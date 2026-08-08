@@ -430,17 +430,31 @@ const DetectionPage = ({ user }) => {
             </div>
 
             {/* Sample Images Strip */}
-            <div className="glass-panel" style={{ marginTop: '1.5rem', padding: '1rem', display: 'flex', gap: '1rem', overflowX: 'auto', alignItems: 'center' }}>
-                <div style={{ fontWeight: 800, color: 'var(--text-light)', whiteSpace: 'nowrap', marginRight: '0.5rem' }}>Test Samples:</div>
-                {['dataset_excellent.png', 'dataset_good.png', 'dataset_average.png', 'dataset_bad.png', 'dataset_worst.png'].map((img, idx) => {
-                    const titles = ['Excellent', 'Good', 'Average', 'Bad', 'Worst'];
-                    return (
-                        <div key={idx} onClick={() => loadSampleImage(`/images/${img}`)} style={{ cursor: 'pointer', textAlign: 'center', flexShrink: 0 }}>
-                            <img src={`/images/${img}`} alt={titles[idx]} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '0.5rem', border: '2px solid rgba(0,0,0,0.1)' }} />
-                            <div style={{ fontSize: '0.7rem', fontWeight: 700, marginTop: '0.2rem', color: 'var(--text-main)' }}>{titles[idx]}</div>
-                        </div>
-                    );
-                })}
+            <div className="glass-panel" style={{ marginTop: '1.5rem', padding: '1rem', display: 'flex', gap: '0.75rem', overflowX: 'auto', alignItems: 'center' }}>
+                <div style={{ fontWeight: 800, color: 'var(--text-light)', whiteSpace: 'nowrap', marginRight: '0.5rem', fontSize: '0.85rem' }}>📂 Test Samples:</div>
+                {[
+                    { file: 'Excellent (1).JPG', label: 'Excellent', color: '#059669' },
+                    { file: 'Excellent (5).JPG', label: 'Excellent', color: '#059669' },
+                    { file: 'Good (1).JPG', label: 'Good', color: '#0ea5e9' },
+                    { file: 'Good (19).JPG', label: 'Good', color: '#0ea5e9' },
+                    { file: 'Average (79).JPG', label: 'Average', color: '#eab308' },
+                    { file: 'Average (81).JPG', label: 'Average', color: '#eab308' },
+                    { file: 'Bad (40).JPG', label: 'Bad', color: '#f97316' },
+                    { file: 'Bad (8).JPG', label: 'Bad', color: '#f97316' },
+                    { file: 'Worst (26).JPG', label: 'Worst', color: '#ef4444' },
+                    { file: 'Worst (39).JPG', label: 'Worst', color: '#ef4444' },
+                ].map((item, idx) => (
+                    <div key={idx} onClick={() => loadSampleImage(`/images/dataset_samples/${item.file}`)} style={{ cursor: 'pointer', textAlign: 'center', flexShrink: 0 }}>
+                        <img
+                            src={`/images/dataset_samples/${item.file}`}
+                            alt={item.label}
+                            style={{ width: '55px', height: '55px', objectFit: 'cover', borderRadius: '0.5rem', border: `2px solid ${item.color}40`, transition: 'transform 0.2s' }}
+                            onMouseEnter={e => e.target.style.transform = 'scale(1.1)'}
+                            onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                        />
+                        <div style={{ fontSize: '0.65rem', fontWeight: 700, marginTop: '0.2rem', color: item.color }}>{item.label}</div>
+                    </div>
+                ))}
             </div>
 
             {/* Bottom Controls Strip */}
