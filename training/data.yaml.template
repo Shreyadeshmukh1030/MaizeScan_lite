@@ -1,0 +1,8 @@
+# SeedInsight AI - Dataset Configuration
+train: ../dataset/train/images
+val: ../dataset/val/images
+test: ../dataset/test/images # optional
+
+# Classes
+nc: 5
+names: ['Excellent', 'Good', 'Average', 'Bad', 'Worst']

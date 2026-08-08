@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Play, Square, Camera, RefreshCw, CheckCircle2, AlertTriangle, FileText, BarChart3, BookOpen, Trash2, ShieldCheck, Zap, Layers, Info } from 'lucide-react';
+import { Play, Square, Camera, RefreshCw, CheckCircle2, AlertTriangle, FileText, BarChart3, BookOpen, Trash2, ShieldCheck, Zap, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://maizescan-vmi3.onrender.com';
 
 const INITIAL_COUNTS = { Excellent: 0, Good: 0, Average: 0, Bad: 0, Worst: 0 };
 
@@ -99,23 +99,6 @@ const DetectionPage = ({ user }) => {
 
             const percentages = Object.fromEntries(Object.entries(counts).map(([k, v]) => [k.toLowerCase() + '_percentage', totalCount ? (v / totalCount * 100) : 0]));
 
-            const token = localStorage.getItem('token');
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            
-            // Get Geolocation
-            let lat = 21.1458, lng = 79.0882; // Default to Nagpur
-            try {
-                const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-                });
-                lat = pos.coords.latitude;
-                lng = pos.coords.longitude;
-            } catch (e) {
-                // Fallback to random dispersion near Nagpur for demo if GPS blocked
-                lat += (Math.random() - 0.5) * 2;
-                lng += (Math.random() - 0.5) * 2;
-            }
-
             await axios.post(`${API_URL}/batches`, {
                 batch_id: batchId,
                 total_count: totalCount,
@@ -126,18 +109,12 @@ const DetectionPage = ({ user }) => {
                 worst_count: counts.Worst,
                 ...percentages,
                 final_grade: finalGrade,
-                recommendation: recommendation,
-                batch_weight: 100,
-                estimated_revenue: totalCount * 0.1,
-                latitude: lat,
-                longitude: lng
-            }, config);
+                recommendation: recommendation
+            });
             alert(`Batch Saved Successfully! Final Grade: ${finalGrade}`);
         } catch (err) {
             console.error("Save error:", err);
-            const errorMsg = err.response?.data?.detail || err.message;
-            alert(`Failed to save batch: ${errorMsg}`);
-            if (!err.response) setIsBackendDown(true);
+            setIsBackendDown(true);
         }
     };
 
@@ -192,26 +169,20 @@ const DetectionPage = ({ user }) => {
                 return combined.slice(-100); // Keep last 100 points for performance
             });
 
-            if (isBatchActive && res.data.length > 0) {
-                setCounts(prev => {
-                    const next = { ...prev };
-                    res.data.forEach(d => {
-                        if (next.hasOwnProperty(d.label)) {
-                            next[d.label]++;
-                        }
-                    });
-                    return next;
+            if (isBatchActive) {
+                const newCounts = { ...counts };
+                res.data.forEach(d => { 
+                    if (newCounts.hasOwnProperty(d.label)) {
+                        newCounts[d.label]++; 
+                        // Add to live telemetry log
+                        setLogs(prev => [`[DET] ${d.label.toUpperCase()} detected (conf: ${d.confidence.toFixed(2)})`, ...prev.slice(0, 15)]);
+                    }
                 });
-                
-                // Update specific logs for detections
-                res.data.forEach(d => {
-                    setLogs(prev => [`[DET] ${d.label.toUpperCase()} detected (conf: ${d.confidence.toFixed(2)})`, ...prev.slice(0, 15)]);
-                });
+                setCounts(newCounts);
             }
         } catch (err) {
             console.error("Detection Error:", err);
-            // Only set backend down if it's a network error
-            if (!err.response) setIsBackendDown(true);
+            setIsBackendDown(true);
         } finally {
             setIsProcessing(false);
         }
@@ -273,21 +244,7 @@ const DetectionPage = ({ user }) => {
                         }}
                     >
                         <Layers size={18} /> {showHeatmap ? 'HIDE HEATMAP' : 'SHOW HEATMAP'}
-                        <div className="tooltip-container" style={{ position: 'relative', display: 'inline-block' }}>
-                           <Info size={14} style={{ marginLeft: '4px', opacity: 0.6 }} />
-                           <div className="tooltip-text" style={{ 
-                               visibility: 'hidden', width: '200px', backgroundColor: '#051F20', color: '#fff', 
-                               textAlign: 'center', borderRadius: '6px', padding: '10px', position: 'absolute', 
-                               zIndex: 100, bottom: '125%', left: '50%', transform: 'translateX(-50%)', opacity: 0, 
-                               transition: 'opacity 0.3s', fontSize: '0.75rem', lineHeight: '1.4'
-                           }}>
-                               Heatmap highlights areas with higher defect concentration. Red zones indicate cluster of bad seeds.
-                           </div>
-                        </div>
                     </button>
-                    <style>{`
-                        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
-                    `}</style>
                     {!isBackendDown && (
                         <div className="glass-panel" style={{ padding: '0.6rem 1.2rem', color: '#00C853', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <div style={{ width: 8, height: 8, background: '#00C853', borderRadius: '50%' }} /> AI ENGINE ACTIVE
@@ -442,15 +399,15 @@ const DetectionPage = ({ user }) => {
                     <div className="glass-panel" style={{ padding: '1.5rem' }}>
                         <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase', marginBottom: '1.2rem' }}>AI Sensitivity</h3>
                         <input
-                            type="range" min="0.1" max="1.0" step="0.1"
+                            type="range" min="0.1" max="0.95" step="0.05"
                             value={confidenceThreshold}
                             onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
                             style={{ width: '100%', accentColor: 'var(--primary)', marginBottom: '0.5rem' }}
                         />
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 800 }}>
-                            <span title="Low confidence: detects more seeds (may be less accurate)">Low Sens.</span>
-                            <span style={{ color: 'var(--primary)' }}>{Math.round(confidenceThreshold * 100)}% Conf.</span>
-                            <span title="High confidence: detects only clearly visible seeds (very accurate)">High Sens.</span>
+                            <span>Speed</span>
+                            <span style={{ color: 'var(--primary)' }}>{Math.round(confidenceThreshold * 100)}% Match</span>
+                            <span>Precision</span>
                         </div>
                     </div>
                 </div>

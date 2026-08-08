@@ -23,11 +23,6 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class UserUpdate(BaseModel):
-    full_name: Optional[str] = None
-    role: Optional[str] = None
-    organization_name: Optional[str] = None # For UI convenience
-
 class User(UserBase):
     id: int
     is_active: bool
@@ -52,8 +47,6 @@ class BatchBase(BaseModel):
     worst_percentage: float
     final_grade: str
     recommendation: str
-    batch_weight: float = 100.0
-    estimated_revenue: float = 0.0
     
     # Metadata
     latitude: Optional[float] = None

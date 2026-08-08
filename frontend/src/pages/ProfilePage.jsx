@@ -13,8 +13,6 @@ const ProfilePage = ({ user: initialUser }) => {
     const [user, setUser] = useState(initialUser);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editData, setEditData] = useState({ full_name: '', role: '', organization_name: '' });
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -23,20 +21,15 @@ const ProfilePage = ({ user: initialUser }) => {
                 if (!token) return;
 
                 const API_URL = import.meta.env.VITE_API_URL || '/api';
-                const config = { headers: { Authorization: `Bearer ${token}` } };
-                
                 const [userRes, statsRes] = await Promise.all([
-                    axios.get(`${API_URL}/users/me`, config),
-                    axios.get(`${API_URL}/analytics`, config)
+                    axios.get(`${API_URL}/users/me`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }),
+                    axios.get(`${API_URL}/analytics`)
                 ]);
 
                 setUser(userRes.data);
                 setStats(statsRes.data);
-                setEditData({ 
-                    full_name: userRes.data.full_name, 
-                    role: userRes.data.role,
-                    organization_name: "Agri-Core Network" 
-                });
             } catch (err) {
                 console.error("Profile fetch failed:", err);
             } finally {
@@ -45,23 +38,6 @@ const ProfilePage = ({ user: initialUser }) => {
         };
         fetchProfile();
     }, []);
-
-    const handleUpdateProfile = async (e) => {
-        e.preventDefault();
-        try {
-            const token = localStorage.getItem('token');
-            const API_URL = import.meta.env.VITE_API_URL || '/api';
-            const res = await axios.put(`${API_URL}/users/profile`, editData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setUser(res.data);
-            setIsEditing(false);
-            alert("Profile Synchronized!");
-        } catch (err) {
-            console.error("Profile update failed:", err);
-            alert("Failed to update profile.");
-        }
-    };
 
     const logout = () => {
         localStorage.removeItem('token');
@@ -91,7 +67,7 @@ const ProfilePage = ({ user: initialUser }) => {
                         }}>
                             {user?.full_name?.charAt(0) || 'U'}
                         </div>
-                        <button onClick={() => setIsEditing(true)} style={{ position: 'absolute', bottom: '5px', right: '35%', background: 'var(--primary-light)', color: 'white', padding: '0.6rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer' }}>
+                        <button style={{ position: 'absolute', bottom: '5px', right: '35%', background: 'var(--primary-light)', color: 'white', padding: '0.6rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer' }}>
                             <Edit3 size={16} />
                         </button>
                     </div>
@@ -114,52 +90,6 @@ const ProfilePage = ({ user: initialUser }) => {
                         <LogOut size={18} /> Disconnect Account
                     </button>
                 </motion.div>
-
-                {/* Edit Profile Modal */}
-                <AnimatePresence>
-                    {isEditing && (
-                        <motion.div 
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)' }}
-                        >
-                            <motion.div 
-                                initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
-                                className="glass-panel" 
-                                style={{ width: '90%', maxWidth: '500px', padding: '3rem', background: 'white' }}
-                            >
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 950, marginBottom: '2rem' }}>Edit Platform Identity</h2>
-                                <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-light)', marginBottom: '0.5rem', display: 'block' }}>FULL LEGAL NAME</label>
-                                        <input 
-                                            type="text" 
-                                            value={editData.full_name} 
-                                            onChange={(e) => setEditData({...editData, full_name: e.target.value})}
-                                            style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: 700 }} 
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-light)', marginBottom: '0.5rem', display: 'block' }}>PROFESSIONAL ROLE</label>
-                                        <select 
-                                            value={editData.role} 
-                                            onChange={(e) => setEditData({...editData, role: e.target.value})}
-                                            style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: 700 }}
-                                        >
-                                            <option value="Farmer">Farmer</option>
-                                            <option value="Lab Tech">Lab Tech</option>
-                                            <option value="Auditor">Auditor</option>
-                                            <option value="Admin">Admin</option>
-                                        </select>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                        <button type="button" onClick={() => setIsEditing(false)} className="btn btn-secondary" style={{ flex: 1 }}>Cancel</button>
-                                        <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save Changes</button>
-                                    </div>
-                                </form>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
 
                 {/* RIGHT PANEL: Dynamic Content Tabs */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

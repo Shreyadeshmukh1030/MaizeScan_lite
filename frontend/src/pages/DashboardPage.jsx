@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
     Database, TrendingUp, Users, AlertTriangle, Download,
     Calendar, Search, ArrowUpRight, ArrowDownRight, FileSpreadsheet,
@@ -10,10 +9,9 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import QualityMap from '../components/QualityMap';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const DashboardPage = ({ user }) => {
-    const navigate = useNavigate();
     const [batches, setBatches] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
@@ -29,11 +27,8 @@ const DashboardPage = ({ user }) => {
     useEffect(() => {
         const fetchAll = async () => {
             try {
-                const token = localStorage.getItem('token');
-                const config = { headers: { Authorization: `Bearer ${token}` } };
-                
-                const res = await axios.get(`${API_URL}/analytics`, config);
-                const bRes = await axios.get(`${API_URL}/batches`, config);
+                const res = await axios.get(`${API_URL}/analytics`);
+                const bRes = await axios.get(`${API_URL}/batches`);
 
                 setStats(res.data);
                 setBatches(bRes.data);
@@ -81,16 +76,17 @@ const DashboardPage = ({ user }) => {
     // Palette: #051F20 (Dark), #235347 (Primary), #8EB69B (Muted), #DAF1DE (Mint)
     const COLORS = ['#235347', '#52b788', '#8EB69B', '#b9dec9', '#051F20'];
 
-    const MARKET_CONFIG = {
-        'A': { price: 2800, type: "Premium Seed Market", rec: "Sell as premium seeds → highest profit" },
-        'B': { price: 1950, type: "Commercial Grain", rec: "Sell in commercial grain market" },
-        'C': { price: 1250, type: "Processing/Feed", rec: "Use for processing / animal feed" }
+    // --- NEW: MARKET PRICE SIMULATION ---
+    const MARKET_PRICES = {
+        'A': 2400, // INR per Quintal
+        'B': 1850,
+        'C': 1200
     };
 
-    const latestBatch = batches[0] || { final_grade: 'C', batch_weight: 100, bad_percentage: 0, worst_percentage: 0 };
-    const marketInfo = MARKET_CONFIG[latestBatch.final_grade] || MARKET_CONFIG['C'];
-    const estimatedEarnings = latestBatch.batch_weight * (marketInfo.price / 100); // Price per quintal (100kg)
-    const isHighRisk = (latestBatch.bad_percentage + latestBatch.worst_percentage) > 15;
+    const latestBatch = batches[0] || {};
+    const currentPrice = MARKET_PRICES[latestBatch.final_grade] || 0;
+    const potentialGain = MARKET_PRICES['A'] - currentPrice;
+    const isHighRisk = (latestBatch.bad_count + latestBatch.worst_count) > (latestBatch.total_count * 0.15);
 
     return (
         <div style={{ padding: '2rem', minHeight: '100vh', position: 'relative' }}>
@@ -132,13 +128,7 @@ const DashboardPage = ({ user }) => {
                                 Immediate silo isolation recommended to prevent moisture-spread.
                             </p>
                         </div>
-                        <button 
-                            className="btn btn-primary" 
-                            style={{ marginLeft: 'auto', background: '#ef4444' }}
-                            onClick={() => navigate('/reports')}
-                        >
-                            View Risk Report
-                        </button>
+                        <button className="btn btn-primary" style={{ marginLeft: 'auto', background: '#ef4444' }}>View Risk Report</button>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -203,22 +193,19 @@ const DashboardPage = ({ user }) => {
                 
                 <div>
                     <div className="section-tag" style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>AI Profit Maximizer</div>
-                    <h2 style={{ fontSize: '2.2rem', fontWeight: 950, marginBottom: '1.5rem' }}>Current Batch Strategy</h2>
-                    <p style={{ color: '#34d399', fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem' }}>
-                        {marketInfo.rec}
-                    </p>
-                    <p style={{ opacity: 0.8, fontSize: '1rem', maxWidth: '600px', lineHeight: 1.6 }}>
-                        Based on the current Grade {latestBatch.final_grade} quality at {latestBatch.batch_weight}kg, your estimated value in the **{marketInfo.type}** is optimally calculated.
+                    <h2 style={{ fontSize: '2.2rem', fontWeight: 950, marginBottom: '1.5rem' }}>Your Current Batch Value: <span style={{ color: '#34d399' }}>₹{currentPrice}/quintal</span></h2>
+                    <p style={{ opacity: 0.8, fontSize: '1.1rem', maxWidth: '600px', lineHeight: 1.6 }}>
+                        Our AI models suggest that by removing {latestBatch.bad_count + latestBatch.worst_count} defective seeds from this batch, you can upgrade to **Grade A** quality.
                     </p>
                     <div style={{ display: 'flex', gap: '2rem', marginTop: '2.5rem' }}>
                         <div>
-                            <div style={{ fontSize: '0.8rem', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Est. Market Revenue</div>
-                            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#34d399' }}>₹{estimatedEarnings.toLocaleString()} <ArrowUpRight size={20} /></div>
+                            <div style={{ fontSize: '0.8rem', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Potential Profit Lift</div>
+                            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#34d399' }}>+₹{potentialGain} <ArrowUpRight size={20} /></div>
                         </div>
                         <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)' }} />
                         <div>
-                            <div style={{ fontSize: '0.8rem', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Market Snapshot</div>
-                            <div style={{ fontSize: '2rem', fontWeight: 900 }}>₹{marketInfo.price}<span style={{ fontSize: '1rem', opacity: 0.5 }}> /QL</span></div>
+                            <div style={{ fontSize: '0.8rem', opacity: 0.6, textTransform: 'uppercase', fontWeight: 800 }}>Market Rating</div>
+                            <div style={{ fontSize: '2rem', fontWeight: 900 }}>{latestBatch.final_grade || 'PND'} <span style={{ fontSize: '1rem', opacity: 0.5 }}>INDEX</span></div>
                         </div>
                     </div>
                 </div>
@@ -229,13 +216,7 @@ const DashboardPage = ({ user }) => {
                     </div>
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 950, marginBottom: '0.5rem' }}>Enable Agri-Trader API</h3>
                     <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '1.5rem' }}>Automate your price listings on regional markets directly from MaizeScan results.</p>
-                    <button 
-                        className="btn btn-primary" 
-                        style={{ background: 'white', color: 'var(--primary-dark)', width: '100%' }}
-                        onClick={() => window.open('https://agmarknet.gov.in/', '_blank')}
-                    >
-                        Connect Marketplace
-                    </button>
+                    <button className="btn btn-primary" style={{ background: 'white', color: 'var(--primary-dark)', width: '100%' }}>Connect Marketplace</button>
                 </div>
             </div>
 
@@ -366,7 +347,7 @@ const DashboardPage = ({ user }) => {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-panel" style={{ padding: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h3 style={{ fontSize: '1.2rem' }}>Recent Batch Inspections</h3>
-                    <button onClick={() => navigate('/reports')} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>View All <ArrowUpRight size={16} /></button>
+                    <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>View All <ArrowUpRight size={16} /></button>
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>

@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import Optional, List
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -25,18 +25,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 480
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
-
-# Auto-migrate: Ensure new columns exist in the database (for SQLite/existing DBs)
-from sqlalchemy import inspect, text
-inspector = inspect(engine)
-existing_columns = [col['name'] for col in inspector.get_columns('batches')]
-with engine.connect() as conn:
-    if 'batch_weight' not in existing_columns:
-        conn.execute(text("ALTER TABLE batches ADD COLUMN batch_weight FLOAT DEFAULT 100.0"))
-        conn.commit()
-    if 'estimated_revenue' not in existing_columns:
-        conn.execute(text("ALTER TABLE batches ADD COLUMN estimated_revenue FLOAT DEFAULT 0.0"))
-        conn.commit()
 
 app = FastAPI(title="MaizeScan Agri-Core API")
 
@@ -62,7 +50,7 @@ def read_root():
 
 # Robust path for cloud environments
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "seed_model.onnx")
+MODEL_PATH = os.path.join(BASE_DIR, "seed_model.pt")
 detector = detection.SeedDetector(model_path=MODEL_PATH)
 
 # --- AUTH UTILS ---
@@ -141,24 +129,9 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 async def read_users_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
-@app.put("/users/profile", response_model=schemas.User)
-async def update_user_profile(
-    user_update: schemas.UserUpdate, 
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    if user_update.full_name is not None:
-        current_user.full_name = user_update.full_name
-    if user_update.role is not None:
-        current_user.role = user_update.role
-    
-    db.commit()
-    db.refresh(current_user)
-    return current_user
-
 # --- CORE API ROUTES ---
 @app.post("/detect", response_model=List[schemas.DetectionResult])
-async def detect_seeds(file: UploadFile = File(...), threshold: float = Form(0.5)):
+async def detect_seeds(file: UploadFile = File(...), threshold: float = 0.5):
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -167,70 +140,38 @@ async def detect_seeds(file: UploadFile = File(...), threshold: float = Form(0.5
     return detector.detect(img, conf=threshold)
 
 @app.post("/batches", response_model=schemas.Batch)
-def create_batch(
-    batch: schemas.BatchCreate, 
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    # Enforce ownership from authenticated user
-    batch_data = batch.dict()
-    batch_data["owner_id"] = current_user.id
-    if current_user.org_id:
-        batch_data["org_id"] = current_user.org_id
-        
-    db_batch = models.Batch(**batch_data)
+def create_batch(batch: schemas.BatchCreate, db: Session = Depends(get_db)):
+    # Note: In production, we'd add current_user dependency here
+    # For now, we allow optional owner_id from the request
+    db_batch = models.Batch(**batch.dict())
     db.add(db_batch)
     db.commit()
     db.refresh(db_batch)
     return db_batch
 
 @app.get("/batches", response_model=List[schemas.Batch])
-def get_batches(
-    skip: int = 0, 
-    limit: int = 100, 
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    # Only return batches belonging to the current user
-    return db.query(models.Batch).filter(models.Batch.owner_id == current_user.id).order_by(models.Batch.timestamp.desc()).offset(skip).limit(limit).all()
+def get_batches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(models.Batch).order_by(models.Batch.timestamp.desc()).offset(skip).limit(limit).all()
 
 @app.get("/batches/{batch_id}", response_model=schemas.Batch)
-def get_batch(
-    batch_id: int, 
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    db_batch = db.query(models.Batch).filter(
-        models.Batch.id == batch_id,
-        models.Batch.owner_id == current_user.id
-    ).first()
+def get_batch(batch_id: int, db: Session = Depends(get_db)):
+    db_batch = db.query(models.Batch).filter(models.Batch.id == batch_id).first()
     if not db_batch:
-        raise HTTPException(status_code=404, detail="Batch not found access denied")
+        raise HTTPException(status_code=404, detail="Batch not found")
     return db_batch
 
 @app.delete("/batches/{batch_id}")
-def delete_batch(
-    batch_id: int, 
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    db_batch = db.query(models.Batch).filter(
-        models.Batch.id == batch_id,
-        models.Batch.owner_id == current_user.id
-    ).first()
+def delete_batch(batch_id: int, db: Session = Depends(get_db)):
+    db_batch = db.query(models.Batch).filter(models.Batch.id == batch_id).first()
     if not db_batch:
-        raise HTTPException(status_code=404, detail="Batch audit not found or access denied")
+        raise HTTPException(status_code=404, detail="Batch audit not found")
     db.delete(db_batch)
     db.commit()
     return {"message": "Audit trace deleted"}
 
 @app.get("/analytics")
-def get_analytics(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    # Only calculate analytics for the current user's data
-    batches = db.query(models.Batch).filter(models.Batch.owner_id == current_user.id).all()
+def get_analytics(db: Session = Depends(get_db)):
+    batches = db.query(models.Batch).all()
     if not batches:
         return {
             "grade_distribution": [],

@@ -24,11 +24,11 @@ const translations = {
         // Interpreting Results
         gradingTitle: "Understanding AI Grades",
         gradeA: "Grade A - Elite",
-        gradeADesc: "<5% Defect. Premium seeds. Primary seed stock. Low risk.",
+        gradeADesc: "90%+ Germination. Primary seed stock. Low risk.",
         gradeB: "Grade B - Standard",
-        gradeBDesc: "5-15% Defect. Commercial sale. Moderate risk.",
+        gradeBDesc: "80-90% Germination. Commercial sale. Moderate risk.",
         gradeC: "Grade C - Reject",
-        gradeCDesc: ">15% Defect. Animal feed only. High risk.",
+        gradeCDesc: "<80% Germination. Animal feed only. High risk.",
 
         // Capture Tips
         captureTitle: "Perfect Image Capture",

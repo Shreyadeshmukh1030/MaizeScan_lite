@@ -58,8 +58,6 @@ class Batch(Base):
     # Grading Result
     final_grade = Column(String)
     recommendation = Column(String)
-    batch_weight = Column(Float, default=100.0) # In KG
-    estimated_revenue = Column(Float, default=0.0)
     
     # Geospatial Metadata
     latitude = Column(Float, nullable=True)
